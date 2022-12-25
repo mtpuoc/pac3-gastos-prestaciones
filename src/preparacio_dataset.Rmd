@@ -1,0 +1,129 @@
+---
+title: 'pac3: Gastos prestaciones'
+author: "mtp1268"
+date: "24/12/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Es carrega les llibreries
+```{r}
+library(readr)
+library(ggplot2)
+```
+
+
+## Es carrega els datasets
+Es carrega els datasets històrics dels últims 4 anys: 2018 al 2022.
+
+```{r}
+a_22 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2022_csv.csv", sep = ";", skip=1)
+a_21 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2021_csv.csv", sep = ";", skip=1)
+a_20 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2020_csv.csv", sep = ";", skip=1)
+a_19 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2019_csv.csv", sep = ";", skip=1)
+a_18 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2018_csv.csv", sep = ";", skip=1)
+```
+
+## Dataset únic i Data cleaning
+Es crea un data set únic dels últms 4 anys
+
+```{r}
+df_gastos_prestaciones <- rbind(a_22,a_21,a_20,a_19,a_18)
+
+remove(a_22,a_21,a_20,a_19,a_18)
+```
+
+
+## Mostra informació del data final
+
+```{r}
+summary(df_gastos_prestaciones)
+
+str(df_gastos_prestaciones)
+```
+
+## S'omet els camps que no es necesiten
+
+Es treuen els camps que no son necesaris
+```{r}
+df_gastos_prestaciones$mes <- NULL
+df_gastos_prestaciones$Código.de.CA <- NULL
+df_gastos_prestaciones$Codigo.Provincia <- NULL
+```
+
+Els camps que son númerics estan registrats com string per tant es pasa a numeric
+```{r}
+df_gastos_prestaciones$Gasto.Total.Prestación <- gsub(",",".",df_gastos_prestaciones$Gasto.Total.Prestación)
+df_gastos_prestaciones$Gasto.Prestación.Contributiva <- gsub(",",".", df_gastos_prestaciones$Gasto.Prestación.Contributiva)
+df_gastos_prestaciones$Gasto.Subsidio.Desempleo <- gsub(",", ".", df_gastos_prestaciones$Gasto.Subsidio.Desempleo)
+df_gastos_prestaciones$Gasto.Renta.Activa.Inserción <- gsub(",", ".", df_gastos_prestaciones$Gasto.Renta.Activa.Inserción)
+df_gastos_prestaciones$Gasto.Subsidio.Eventuales.Agrarios <- gsub(",", ".", df_gastos_prestaciones$Gasto.Subsidio.Eventuales.Agrarios)
+
+
+df_gastos_prestaciones$Gasto.Total.Prestación <- as.double(df_gastos_prestaciones$Gasto.Total.Prestación)
+df_gastos_prestaciones$Gasto.Prestación.Contributiva <- as.double(df_gastos_prestaciones$Gasto.Prestación.Contributiva)
+df_gastos_prestaciones$Gasto.Subsidio.Desempleo <- as.double(df_gastos_prestaciones$Gasto.Subsidio.Desempleo)
+df_gastos_prestaciones$Gasto.Renta.Activa.Inserción <- as.double(df_gastos_prestaciones$Gasto.Renta.Activa.Inserción)
+df_gastos_prestaciones$Gasto.Subsidio.Eventuales.Agrarios <- as.double(df_gastos_prestaciones$Gasto.Subsidio.Eventuales.Agrarios)
+```
+
+
+## Es separa els dos camps de mes
+
+```{r}
+df_gastos_prestaciones["mes"] <- substring(df_gastos_prestaciones$Código.mes,5,6)
+df_gastos_prestaciones["any"] <- substring(df_gastos_prestaciones$Código.mes,1,4)
+
+df_gastos_prestaciones$Código.mes <- NULL
+```
+
+
+## Es mostra el dataset final
+```{r}
+head(df_gastos_prestaciones,5)
+```
+
+
+## Es realitza una exploració visual al dataset
+
+```{r}
+t <- aggregate(df_gastos_prestaciones$Gasto.Total.Prestación, by=list(Category=df_gastos_prestaciones$any), FUN=sum)
+
+barplot(t$x, names.arg = t$Category, main="variable: total de prestacions")
+
+hist(df_gastos_prestaciones$Gasto.Total.Prestación, main="Total de prestacions")
+
+```
+
+
+```{r}
+t <- aggregate(df_gastos_prestaciones$Gasto.Prestación.Contributiva, by=list(Category=df_gastos_prestaciones$any), FUN=sum)
+
+barplot(t$x, names.arg = t$Category, main="variable: prestació contributiva")
+
+hist(df_gastos_prestaciones$Gasto.Prestación.Contributiva, main="variable: prestació contributiva")
+
+```
+
+
+
+```{r}
+t <- aggregate(df_gastos_prestaciones$Gasto.Subsidio.Desempleo, by=list(Category=df_gastos_prestaciones$any), FUN=sum)
+
+barplot(t$x, names.arg = t$Category, main="variable: Subsidio desempleo")
+
+hist(df_gastos_prestaciones$Gasto.Subsidio.Desempleo, main="variable: Subsidio desempleo")
+
+```
+
+
+## generar el CSV
+
+Es crea el CSV amb la taula definitiva per a carregarla al seguent proces
+```{r}
+write.csv2(df_gastos_prestaciones,"../data/gastos_prestaciones.csv", row.names = FALSE, fileEncoding = "UTF-8")
+```
+
