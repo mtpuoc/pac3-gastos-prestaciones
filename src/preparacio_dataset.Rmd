@@ -1,5 +1,5 @@
 ---
-title: 'pac3: Gastos prestaciones'
+title: 'pac3: Gastos prestacions'
 author: "mtp1268"
 date: "24/12/2022"
 output: html_document
@@ -25,15 +25,20 @@ a_21 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos
 a_20 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2020_csv.csv", sep = ";", skip=1)
 a_19 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2019_csv.csv", sep = ";", skip=1)
 a_18 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2018_csv.csv", sep = ";", skip=1)
+a_17 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2017_csv.csv", sep = ";", skip=1)
+a_16 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2016_csv.csv", sep = ";", skip=1)
+a_15 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2015_csv.csv", sep = ";", skip=1)
+a_14 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2014_csv.csv", sep = ";", skip=1)
+a_13 <- read.csv("https://sede.sepe.gob.es/es/portaltrabaja/resources/sede/datos_abiertos/datos/Gastos_Prestaciones_2013_csv.csv", sep = ";", skip=1)
 ```
 
 ## Dataset únic i Data cleaning
 Es crea un data set únic dels últms 4 anys
 
 ```{r}
-df_gastos_prestaciones <- rbind(a_22,a_21,a_20,a_19,a_18)
+df_gastos_prestaciones <- rbind(a_22,a_21,a_20,a_19,a_18,a_17,a_16, a_15,a_14, a_13)
 
-remove(a_22,a_21,a_20,a_19,a_18)
+remove(a_22,a_21,a_20,a_19,a_18,a_17,a_16, a_15,a_14, a_13)
 ```
 
 
@@ -80,12 +85,42 @@ df_gastos_prestaciones["any"] <- substring(df_gastos_prestaciones$Código.mes,1,
 df_gastos_prestaciones$Código.mes <- NULL
 ```
 
+## Es revisa els valors de les comunitats
+```{r}
+unique(df_gastos_prestaciones$Comunidad.Autónoma)
+```
+
+Es neteja alguns noms de comunitats:
+```{r}
+df_gastos_prestaciones[df_gastos_prestaciones$Comunidad.Autónoma == "Asturias, Principado de","Comunidad.Autónoma"] <- "Asturias"
+df_gastos_prestaciones[df_gastos_prestaciones$Comunidad.Autónoma == "Balears, Illes","Comunidad.Autónoma"] <- "Illes Balears"
+df_gastos_prestaciones[df_gastos_prestaciones$Comunidad.Autónoma == "Madrid, Comunidad de","Comunidad.Autónoma"] <- "Madrid"
+df_gastos_prestaciones[df_gastos_prestaciones$Comunidad.Autónoma == "Murcia, Región de","Comunidad.Autónoma"] <- "Murcia"
+df_gastos_prestaciones[df_gastos_prestaciones$Comunidad.Autónoma == "Navarra, Comunidad Foral de","Comunidad.Autónoma"] <- "Navarra"
+df_gastos_prestaciones[df_gastos_prestaciones$Comunidad.Autónoma == "Rioja, La","Comunidad.Autónoma"] <- "La Rioja"
+```
+
+Es borra els registres de la comunitat TOTAL, ja que es l'agrupació de totes les comunitats:
+```{r}
+df_gastos_prestaciones <- df_gastos_prestaciones[df_gastos_prestaciones$Comunidad.Autónoma!="TOTAL",]
+```
+
 
 ## Es mostra el dataset final
 ```{r}
 head(df_gastos_prestaciones,5)
 ```
 
+## Es revisa si hi ha outliers
+
+```{r}
+boxplot(df_gastos_prestaciones$Gasto.Total.Prestación)
+
+boxplot(log10(df_gastos_prestaciones$Gasto.Total.Prestación))
+
+```
+
+Hi ha alguns peró no es poden ometre perque son les despeses que hi han i s'han de tenir en compte.
 
 ## Es realitza una exploració visual al dataset
 
@@ -95,6 +130,8 @@ t <- aggregate(df_gastos_prestaciones$Gasto.Total.Prestación, by=list(Category=
 barplot(t$x, names.arg = t$Category, main="variable: total de prestacions")
 
 hist(df_gastos_prestaciones$Gasto.Total.Prestación, main="Total de prestacions")
+
+hist(log10(df_gastos_prestaciones$Gasto.Total.Prestación), main="Total de prestacions")
 
 ```
 
