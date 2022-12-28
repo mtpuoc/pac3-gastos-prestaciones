@@ -6,7 +6,7 @@ gastos_prestaciones <- read.csv2("../data/gastos_prestaciones.csv", sep=";", fil
 
 # Define UI ----
 ui <- fluidPage(
-  titlePanel("Despeses de les prestacions del 2018 al 2022"),
+  titlePanel("Despeses de les prestacions del 2013 al 2022"),
   
   sidebarLayout(
     sidebarPanel("Panel de filtres:",
